@@ -3,10 +3,13 @@ package com.zamahaka.exceltest
 import android.os.Bundle
 import android.os.Environment
 import android.support.v7.app.AppCompatActivity
+import org.apache.poi.hssf.usermodel.HSSFCellStyle
 import org.apache.poi.hssf.usermodel.HSSFWorkbook
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -42,8 +45,12 @@ class MainActivity : AppCompatActivity() {
         val workbook = HSSFWorkbook(createdStream)
         val sheet = workbook.getSheetAt(0)
 
-        for (row in 1 until 50) {
-            sheet.createRow(row).createCell(0).setCellValue(getTime(row * 6))
+        val cellStyle = createCellDataType(workbook)
+
+        for (row in 1 until 49) {
+            val cell = sheet.createRow(row).createCell(0)
+            cell.setCellStyle(cellStyle)
+            cell.setCellValue(getTime(row * 6))
         }
 
         val editedStream = FileOutputStream(file)
@@ -54,11 +61,21 @@ class MainActivity : AppCompatActivity() {
         editedStream.close()
     }
 
-    private fun getTime(i: Int): String {
-        val rem = i.rem(60)
-        val div = i.div(60)
+    private fun createCellDataType(workbook: HSSFWorkbook): HSSFCellStyle {
+        val cellStyle = workbook.createCellStyle()
+        val createHelper = workbook.creationHelper
+        cellStyle.dataFormat = createHelper.createDataFormat().getFormat("mm:ss")
+        return cellStyle
+    }
 
-        return "$div:$rem"
+    private fun getTime(i: Int): Date {
+        val seconds = i.rem(60)
+        val minutes = i.div(60)
+
+        val time = String.format(getString(R.string.cell_format),minutes, seconds)
+        val dateFormat = SimpleDateFormat("mm:ss")
+        return dateFormat.parse(time)
+
     }
 
     private fun generateSheet(file: File?) {
